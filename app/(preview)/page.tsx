@@ -26,6 +26,11 @@ export default function Home() {
       label: "have shipped?",
       action: "what orders have shipped?",
     },
+    {
+      title: "When will the last",
+      label: "order arrive?",
+      action: "when will the last order arrive?",
+    },
   ];
 
   return (

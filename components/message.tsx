@@ -77,6 +77,18 @@ export const Message = ({
                       <div key={toolCallId}>
                         <Tracker trackingInformation={result} />
                       </div>
+                    ) : toolName === "fetchHeadlines" ? (
+                      <div>FETCHING THE HEADLINES!!!</div>
+                    ) : toolName === "search" ? (
+                      <div>SEARCHING FOR {result}!!!</div>
+                    ) : toolName === "createClientProfile" ? (
+                      <div>Client profile: {JSON.stringify(result)}</div>
+                    ) : toolName === "draftColdEmail" ? (
+                      <div>
+                        Cold email
+                        <h2 className="font-bold">{result.subject}</h2>
+                        <p>{result.body}</p>
+                      </div>
                     ) : null}
                   </div>
                 );
