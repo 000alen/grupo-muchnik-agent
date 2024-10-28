@@ -23,8 +23,7 @@ export default function SignUp() {
           //show loading
         },
         onSuccess: (ctx) => {
-          //redirect to the dashboard
-          router.push("/app");
+          router.push("/crm");
         },
         onError: (ctx) => {
           alert(ctx.error.message);

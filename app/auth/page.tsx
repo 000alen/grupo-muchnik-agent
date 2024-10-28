@@ -21,7 +21,7 @@ export default function Page() {
           //show loading
         },
         onSuccess: () => {
-          router.push("/app");
+          router.push("/crm");
         },
         onError: (ctx) => {
           alert(ctx.error.message);
