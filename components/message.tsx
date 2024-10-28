@@ -1,13 +1,12 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { BotIcon, UserIcon } from "./icons";
 import { ReactNode } from "react";
 import { StreamableValue, useStreamableValue } from "ai/rsc";
 import { Markdown } from "./markdown";
 import { ToolInvocation } from "ai";
-import { Orders } from "./orders";
-import { Tracker } from "./tracker";
 
 export const TextStreamMessage = ({
   content,
@@ -71,13 +70,7 @@ export const Message = ({
 
                 return (
                   <div key={toolCallId}>
-                    {toolName === "listOrders" ? (
-                      <Orders orders={result} />
-                    ) : toolName === "viewTrackingInformation" ? (
-                      <div key={toolCallId}>
-                        <Tracker trackingInformation={result} />
-                      </div>
-                    ) : toolName === "fetchHeadlines" ? (
+                    {toolName === "fetchHeadlines" ? (
                       <div>FETCHING THE HEADLINES!!!</div>
                     ) : toolName === "search" ? (
                       <div>SEARCHING FOR {result}!!!</div>
