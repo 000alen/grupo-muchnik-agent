@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/vercel-postgres";
-import { headline } from "@/db/schema";
+import { headline as headlineTable } from "@/db/schema";
 
-export const HEADLINES: (typeof headline.$inferInsert)[] = [
+export const HEADLINES: (typeof headlineTable.$inferInsert)[] = [
   {
     id: "412093",
     title: "Amazon is entering the healthcare industry in Argentina!",
@@ -25,7 +25,7 @@ async function main() {
   const db = drizzle();
 
   for (const h of HEADLINES) {
-    await db.insert(headline).values(h);
+    await db.insert(headlineTable).values(h);
   }
 }
 

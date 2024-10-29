@@ -62,3 +62,12 @@ export const profile = pgTable("profile", {
   action: text("action").notNull(),
   contact: text("contact").notNull(),
 });
+
+export const artifact = pgTable("artifact", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  date: timestamp().notNull(),
+  type: text("type").notNull(),
+  content: text("content").notNull(),
+});

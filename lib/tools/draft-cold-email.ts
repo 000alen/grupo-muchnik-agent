@@ -2,8 +2,12 @@ import { openai } from "@ai-sdk/openai";
 import { CoreTool, generateObject } from "ai";
 import { z } from "zod";
 import { db } from "@/db";
-import { profile as profileTable } from "@/db/schema";
+import {
+  artifact as artifactTable,
+  profile as profileTable,
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { createId } from "@/lib//utils";
 
 export const draftColdEmail: CoreTool = {
   description: "draft a cold email for a potential client",
@@ -34,6 +38,20 @@ export const draftColdEmail: CoreTool = {
       prompt: JSON.stringify(profile),
     });
 
-    return result.object;
+    const email = result.object;
+
+    const id = createId();
+    const content = `Subject: ${email.subject}\n\n${email.body}`;
+
+    await db.insert(artifactTable).values({
+      id,
+      name: `Cold Email: ${email.subject}`,
+      description: `Drafted a cold email for ${profile.company}`,
+      date: new Date(),
+      type: "cold-email",
+      content,
+    });
+
+    return { id, ...email };
   },
 };
