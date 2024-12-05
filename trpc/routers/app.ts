@@ -343,14 +343,51 @@ export const appRouter = router({
     }),
 
     get: procedure
-      .input(z.object({ id: z.number() }))
+      .input(z.object({ id: z.string() }))
       .query(async ({ ctx, input }) => {
         return await ctx.db
           .select()
           .from(schema.ConfigSources)
-          .where(eq(schema.ConfigSources.id, input.id))
+          .where(eq(schema.ConfigSources.id, parseInt(input.id)))
           .limit(1)
           .then(([source]) => source);
+      }),
+
+    create: procedure
+      .input(
+        z.object({
+          sourceName: z.string(),
+          sourceUrl: z.string(),
+          isActive: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        return await ctx.db.insert(schema.ConfigSources).values(input);
+      }),
+
+    update: procedure
+      .input(
+        z.object({
+          id: z.number(),
+          sourceName: z.string(),
+          sourceUrl: z.string(),
+          isActive: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        return await ctx.db
+          .update(schema.ConfigSources)
+          .set(data)
+          .where(eq(schema.ConfigSources.id, id));
+      }),
+
+    delete: procedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await ctx.db
+          .delete(schema.ConfigSources)
+          .where(eq(schema.ConfigSources.id, input.id));
       }),
   },
 });
