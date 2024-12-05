@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Card, DraggableCard } from "@/components/draggable-card";
+import { Card } from "@/components/draggable-card";
 import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 

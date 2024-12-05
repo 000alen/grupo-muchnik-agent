@@ -25,5 +25,6 @@ export function useScrollToBottom<T extends HTMLElement>(): [
     }
   }, []);
 
+  // @ts-expect-error typings
   return [containerRef, endRef];
 }

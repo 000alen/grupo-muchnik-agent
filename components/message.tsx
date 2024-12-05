@@ -17,6 +17,7 @@ export const TextStreamMessage = ({
 
   return (
     <motion.div
+      // @ts-expect-error typings
       className={`flex flex-row gap-4 px-4 w-full md:w-[500px] md:px-0 first-of-type:pt-20`}
       initial={{ y: 5, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -45,6 +46,7 @@ export const Message = ({
 }) => {
   return (
     <motion.div
+      // @ts-expect-error typings
       className={`flex flex-row gap-4 px-4 w-full md:w-[500px] md:px-0 first-of-type:pt-20`}
       initial={{ y: 5, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
