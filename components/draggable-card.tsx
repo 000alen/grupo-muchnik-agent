@@ -1,5 +1,5 @@
-import React from "react";
 import { useDraggable } from "@dnd-kit/core";
+import { cn } from "@/lib/utils";
 
 export interface Card {
   id: string;
@@ -7,31 +7,36 @@ export interface Card {
   content: string;
 }
 
-export const DraggableCard = ({
-  card,
-  columnId,
-  getCardMenu,
-}: {
+interface CardProps {
   card: Card;
-  columnId: string;
-  getCardMenu?: (card: Card) => React.ReactNode;
-}) => {
-  const { attributes, listeners, setNodeRef } = useDraggable({
+  className?: string;
+  menu?: React.ReactNode;
+}
+
+export function Card({ card, className, menu }: CardProps) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: card.id,
   });
 
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
       {...listeners}
-      className="bg-background p-3 rounded-md shadow-sm mb-2 hover:shadow-md transition-shadow group"
+      {...attributes}
+      className={cn(
+        "group relative rounded-lg border bg-card p-3 text-card-foreground shadow-sm",
+        "hover:border-primary/50 transition-colors",
+        isDragging && "opacity-50",
+        className
+      )}
     >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-sm font-medium">{card.title}</h3>
-        {getCardMenu && getCardMenu(card)}
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1.5">
+          <h3 className="text-sm font-medium leading-none">{card.title}</h3>
+          <p className="text-xs text-muted-foreground">{card.content}</p>
+        </div>
+        {menu && <div className="flex-shrink-0">{menu}</div>}
       </div>
-      <p className="text-sm text-muted-foreground">{card.content}</p>
     </div>
   );
-};
+}

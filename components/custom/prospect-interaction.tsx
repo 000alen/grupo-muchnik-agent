@@ -8,7 +8,7 @@ export default function ProspectInteraction({
 }: {
   interaction: ProspectInteractionType;
 }) {
-  const date = new Date(interaction.createdAt);
+  const date = new Date(interaction.createdAt ?? new Date());
   const formattedDate = date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -26,9 +26,9 @@ export default function ProspectInteraction({
           </Badge>
         </div>
       </CardHeader>
-      {interaction.description && (
+      {interaction.notes && (
         <CardContent className="text-sm text-muted-foreground">
-          {interaction.description}
+          {interaction.notes}
         </CardContent>
       )}
     </Card>

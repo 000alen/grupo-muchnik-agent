@@ -6,15 +6,17 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function SourcePage({ params }: Props) {
+  const { id } = await params;
+
   const trpc = await createAsyncCaller();
-  const source = await trpc.sources.get({ id: params.id });
-    
+  const source = await trpc.sources.get({ id });
+
   if (!source) {
     notFound();
   }

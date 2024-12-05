@@ -6,56 +6,59 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card, DraggableCard } from "@/components/draggable-card";
 import { useDroppable } from "@dnd-kit/core";
+import { cn } from "@/lib/utils";
 
 export interface Column {
   id: string;
   title: string;
-  cards: Card[];
+  cards: {
+    id: string;
+    title: string;
+    content: string;
+  }[];
 }
 
-export const DroppableColumn = ({
-  column,
-  getCardMenu,
-}: {
+interface DroppableColumnProps {
   column: Column;
   getCardMenu?: (card: Card) => React.ReactNode;
-}) => {
-  const { setNodeRef } = useDroppable({
+  onCardClick?: (cardId: string) => void;
+}
+
+export function DroppableColumn({
+  column,
+  getCardMenu,
+  onCardClick,
+}: DroppableColumnProps) {
+  const { isOver, setNodeRef } = useDroppable({
     id: column.id,
   });
 
   return (
     <div
       ref={setNodeRef}
-      key={column.id}
-      className="flex-shrink-0 w-[280px] flex flex-col h-full"
+      className={cn(
+        "rounded-lg bg-muted/50 p-4 space-y-4 min-h-[200px] w-full",
+        isOver && "ring-2 ring-primary/20"
+      )}
     >
-      <h2 className="font-medium mb-3 text-muted-foreground">{column.title}</h2>
-      <ScrollArea className="flex-grow rounded-md bg-muted/50 p-2">
-        <SortableContext
-          items={column.cards.map((card) => card.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {column.cards.map((card) => (
-            <DraggableCard
-              key={card.id}
+      <div className="space-y-2">
+        {column.cards.map((card) => (
+          <div
+            key={card.id}
+            className="group cursor-pointer"
+            onClick={() => onCardClick?.(card.id)}
+          >
+            <Card
               card={card}
-              columnId={column.id}
-              getCardMenu={getCardMenu}
+              className={cn(
+                "hover:border-primary/50 transition-colors",
+                "hover:shadow-md"
+              )}
+              menu={getCardMenu?.(card)}
             />
-          ))}
-        </SortableContext>
-        <ScrollBar orientation="vertical" />
-      </ScrollArea>
-
-      {/* <Button
-        variant="ghost"
-        size="sm"
-        className="w-full mt-2 text-muted-foreground hover:text-foreground justify-start px-2"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add a card
-      </Button> */}
+          </div>
+        ))}
+      </div>
     </div>
   );
-};
+}

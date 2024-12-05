@@ -87,6 +87,7 @@ export type ConsultantsCustomers = typeof ConsultantsCustomers.$inferSelect;
 
 export const Bulletins = pgTable("bulletins", {
   id: serial("id").primaryKey(),
+  title: text("title").notNull(),
   content: text("content").default("").notNull(),
   sentAt: timestamp("sent_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
