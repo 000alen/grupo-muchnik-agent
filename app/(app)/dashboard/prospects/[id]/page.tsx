@@ -6,6 +6,7 @@ import NewProspectContactButton from "@/components/custom/new-prospect-contact-b
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import UpgradeToCustomerButton from "@/components/custom/upgrade-to-customer-button";
 
 export default async function ProspectPage({
   params,
@@ -22,13 +23,18 @@ export default async function ProspectPage({
 
   return (
     <div className="container-custom space-y-8 py-8">
-      <div className="flex items-center space-x-4">
-        <Link href="/dashboard/prospects">
-          <Button variant="ghost" size="icon" className="button-custom">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <h1 className="text-3xl font-bold tracking-tight">Prospect Details</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Link href="/dashboard/prospects">
+            <Button variant="ghost" size="icon" className="button-custom">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Prospect Details
+          </h1>
+        </div>
+        <UpgradeToCustomerButton prospectId={id} />
       </div>
 
       <div className="grid gap-8 md:grid-cols-[2fr,1fr]">
@@ -36,7 +42,9 @@ export default async function ProspectPage({
           <Prospect prospect={prospect} />
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold tracking-tight">Interactions</h2>
+              <h2 className="text-2xl font-semibold tracking-tight">
+                Interactions
+              </h2>
             </div>
             <ProspectInteractions prospectId={id} />
           </div>

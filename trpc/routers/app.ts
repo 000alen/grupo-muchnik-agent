@@ -350,6 +350,27 @@ export const appRouter = router({
           nextCursor,
         };
       }),
+    upgradeToCustomer: procedure
+      .input(z.object({ id: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const prospect = await ctx.db
+          .select()
+          .from(schema.Prospects)
+          .where(eq(schema.Prospects.id, input.id))
+          .then(([prospect]) => prospect);
+
+        const customer = await ctx.db
+          .insert(schema.Customers)
+          .values({
+            id: prospect.id,
+            companyName: prospect.companyName,
+            companyIndustry: prospect.companyIndustry,
+          })
+          .returning()
+          .then(([customer]) => customer);
+
+        return customer;
+      }),
   },
 
   bulletins: {
