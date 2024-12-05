@@ -1,6 +1,6 @@
 import { Prospect as ProspectType } from "@/db/app-schema";
 import Link from "next/link";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building, ChevronRight } from "lucide-react";
 
@@ -14,8 +14,16 @@ export default function Prospect({ prospect }: { prospect: ProspectType }) {
           </div>
           <div className="flex-1">
             <h3 className="font-semibold">{prospect.companyName}</h3>
-            {prospect.industry && (
-              <p className="text-sm text-muted-foreground">{prospect.industry}</p>
+            {prospect.companyIndustry && (
+              <p className="text-sm text-muted-foreground">
+                {prospect.companyIndustry}
+              </p>
+            )}
+
+            {prospect.companyAction && (
+              <p className="text-sm text-muted-foreground">
+                {prospect.companyAction}
+              </p>
             )}
           </div>
         </div>

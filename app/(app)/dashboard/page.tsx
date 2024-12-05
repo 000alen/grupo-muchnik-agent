@@ -2,6 +2,7 @@ import { createAsyncCaller } from "@/trpc/routers/app";
 import { Kanban } from "@/components/kanban";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import TriggerJobButton from "@/components/custom/trigger-job-button";
 
 export default async function DashboardPage() {
   const trpc = await createAsyncCaller();
@@ -40,7 +41,7 @@ export default async function DashboardPage() {
     cards: unassignedProspects.map((prospect) => ({
       id: prospect.id,
       title: prospect.companyName || "Unnamed Prospect",
-      content: prospect.industry || "No industry specified",
+      content: prospect.companyIndustry || "No industry specified",
     })),
   });
 
@@ -51,7 +52,7 @@ export default async function DashboardPage() {
       cards: prospectsPerConsultant[index].map((prospect) => ({
         id: prospect.id,
         title: prospect.companyName || "Unnamed Prospect",
-        content: prospect.industry || "No industry specified",
+        content: prospect.companyIndustry || "No industry specified",
       })),
     }))
   );
@@ -62,7 +63,7 @@ export default async function DashboardPage() {
     cards: unassignedCustomers.map((customer) => ({
       id: customer.id,
       title: customer.companyName || "Unnamed Customer",
-      content: customer.industry || "No industry specified",
+      content: customer.companyIndustry || "No industry specified",
     })),
   });
 
@@ -73,7 +74,7 @@ export default async function DashboardPage() {
       cards: customersPerConsultant[index].map((customer) => ({
         id: customer.id,
         title: customer.companyName || "Unnamed Customer",
-        content: customer.industry || "No industry specified",
+        content: customer.companyIndustry || "No industry specified",
       })),
     }))
   );
@@ -86,6 +87,8 @@ export default async function DashboardPage() {
           Manage your prospects and customers across consultants.
         </p>
       </div>
+
+      <TriggerJobButton />
 
       <Tabs defaultValue="prospects" className="space-y-4">
         <TabsList>

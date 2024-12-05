@@ -112,19 +112,19 @@ async function main() {
   const prospects = [
     {
       companyName: "TechnoLatam SA",
-      industry: "Technology",
+      companyIndustry: "Technology",
     },
     {
       companyName: "Industrias del Sur",
-      industry: "Manufacturing",
+      companyIndustry: "Manufacturing",
     },
     {
       companyName: "Banco Regional",
-      industry: "Finance",
+      companyIndustry: "Finance",
     },
     {
       companyName: "Salud Integral",
-      industry: "Healthcare",
+      companyIndustry: "Healthcare",
     },
   ];
 
@@ -137,15 +137,15 @@ async function main() {
   const customers = [
     {
       companyName: "Grupo Constructor ABC",
-      industry: "Construction",
+      companyIndustry: "Construction",
     },
     {
       companyName: "Retail Solutions SA",
-      industry: "Retail",
+      companyIndustry: "Retail",
     },
     {
       companyName: "EduTech Latam",
-      industry: "Education",
+      companyIndustry: "Education",
     },
   ];
 

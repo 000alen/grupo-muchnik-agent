@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const formDataSchema = z.object({
   companyName: z.string(),
-  industry: z.string(),
+  companyIndustry: z.string(),
 });
 
 interface CreateCustomerState {
@@ -22,7 +22,7 @@ export const createCustomer = async (
   try {
     const data = formDataSchema.parse({
       companyName: formData.get("companyName"),
-      industry: formData.get("industry"),
+      companyIndustry: formData.get("industry"),
     });
 
     await trpc.customers.create(data);

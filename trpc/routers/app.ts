@@ -1,9 +1,22 @@
 import { createCallerFactory, procedure, router } from "@/trpc/trpc";
 import { createContext } from "@/trpc/context";
 import { z } from "zod";
-import { desc, eq, and, lte, gte, isNull } from "drizzle-orm";
+import {
+  desc,
+  eq,
+  and,
+  lte,
+  gte,
+  isNull,
+  sql,
+  gt,
+  cosineDistance,
+} from "drizzle-orm";
 import { startOfWeek, endOfWeek } from "date-fns";
 import { createBulletinContent } from "@/lib/bulletin";
+import FirecrawlApp from "@mendable/firecrawl-js";
+import { openai } from "@ai-sdk/openai";
+import { embedMany, embed, generateText, generateObject } from "ai";
 import * as schema from "@/db/schema";
 
 export const appRouter = router({
@@ -158,7 +171,7 @@ export const appRouter = router({
       }),
 
     create: procedure
-      .input(z.object({ companyName: z.string(), industry: z.string() }))
+      .input(z.object({ companyName: z.string(), companyIndustry: z.string() }))
       .mutation(async ({ ctx, input }) => {
         return await ctx.db.insert(schema.Customers).values(input);
       }),
@@ -268,7 +281,7 @@ export const appRouter = router({
       }),
 
     create: procedure
-      .input(z.object({ companyName: z.string(), industry: z.string() }))
+      .input(z.object({ companyName: z.string(), companyIndustry: z.string() }))
       .mutation(async ({ ctx, input }) => {
         return await ctx.db.insert(schema.Prospects).values(input);
       }),
@@ -434,6 +447,232 @@ export const appRouter = router({
         return await ctx.db
           .delete(schema.ConfigSources)
           .where(eq(schema.ConfigSources.id, input.id));
+      }),
+  },
+
+  ai: {
+    scan: procedure.mutation(async ({ ctx }) => {
+      // const activeSources = await ctx.db
+      //   .select()
+      //   .from(schema.ConfigSources)
+      //   .where(eq(schema.ConfigSources.isActive, true));
+      const activeSources = [
+        {
+          sourceName: "TechCrunch",
+          sourceUrl: "https://techcrunch.com",
+        },
+        {
+          sourceName: "New York Times",
+          sourceUrl: "https://nytimes.com",
+        },
+        // {
+        //   sourceName: "La Nacion",
+        //   sourceUrl: "https://www.lanacion.com.ar/",
+        // },
+        // {
+        //   sourceName: "Ambito Financiero",
+        //   sourceUrl: "https://www.ambito.com/",
+        // },
+      ];
+
+      const app = new FirecrawlApp({
+        apiKey: process.env.FIRECRAWL_API_KEY,
+      });
+
+      const model = openai.embedding("text-embedding-3-small");
+
+      const extractSchema = z.object({
+        headlines: z
+          .object({
+            title: z.string().describe("The title of the headline"),
+            company: z
+              .string()
+              .nullable()
+              .describe(
+                "The company the headline is about. If it's not about a company, make this null."
+              ),
+            companyAction: z
+              .string()
+              .nullable()
+              .describe(
+                'The action the company is taking, like "Launched a new product" or "Hired a new CEO". If it\'s not about a company, make this null.'
+              ),
+            companyIndustry: z
+              .string()
+              .nullable()
+              .describe(
+                "The industry the company is in. If it's not about a company, make this null."
+              ),
+            description: z
+              .string()
+              .describe("A short description of the headline"),
+          })
+          .array(),
+      });
+
+      const results = await Promise.all(
+        activeSources.map((source) =>
+          app.scrapeUrl(source.sourceUrl, {
+            formats: ["extract"],
+            extract: { schema: extractSchema },
+          })
+        )
+      );
+
+      const headlines = results
+        .filter((result) => result.success)
+        .filter((result) => !!result.extract)
+        .flatMap((result) => result.extract!.headlines)
+        .filter(
+          (headline) =>
+            !!headline.company &&
+            !!headline.companyAction &&
+            !!headline.companyIndustry
+        );
+
+      const { embeddings } = await embedMany({
+        model,
+        values: headlines.map(
+          (headline) => `${headline.company}: ${headline.companyAction}`
+        ),
+      });
+
+      await Promise.all(
+        headlines.map(async (headline, i) => {
+          const embedding = embeddings[i];
+
+          const similarity = sql<number>`1 - (${cosineDistance(
+            schema.Prospects.embedding,
+            embedding
+          )})`;
+
+          const similarProspect = await ctx.db
+            .select({
+              companyName: schema.Prospects.companyName,
+              companyIndustry: schema.Prospects.companyIndustry,
+              similarity,
+            })
+            .from(schema.Prospects)
+            .where(gt(similarity, 0.8))
+            .orderBy((t) => desc(t.similarity))
+            .limit(1)
+            .then(([prospect]) => prospect);
+
+          if (similarProspect) return;
+
+          return await ctx.db.insert(schema.Prospects).values({
+            companyName: headline.company!,
+            companyAction: headline.companyAction!,
+            companyIndustry: headline.companyIndustry!,
+            embedding,
+          });
+        })
+      );
+
+      return headlines;
+    }),
+
+    write: procedure
+      .input(
+        z.object({
+          prospectId: z.string(),
+          prompt: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const model = openai("gpt-4o");
+        const embedding = openai.embedding("text-embedding-3-small");
+
+        const prospect = await ctx.db
+          .select()
+          .from(schema.Prospects)
+          .where(eq(schema.Prospects.id, input.prospectId))
+          .then(([prospect]) => prospect);
+
+        const result = await generateText({
+          model,
+
+          messages: [
+            {
+              role: "system",
+              content: `You are a sales assistant for a company that sells to customers in the ${prospect.companyIndustry} industry. You are currently working with ${prospect.companyName} who is ${prospect.companyAction}.`,
+            },
+            {
+              role: "user",
+              content: input.prompt,
+            },
+          ],
+
+          maxSteps: 5,
+          tools: {
+            getSimilarCustomers: {
+              description:
+                "Get similar customers based on the company name and action. Could be used to mention past successful deals.",
+              parameters: z.object({
+                companyName: z.string(),
+                companyAction: z.string(),
+              }),
+              async execute({ companyName, companyAction }) {
+                const _embedding = await embed({
+                  model: embedding,
+                  value: `${companyName}: ${companyAction}`,
+                }).then((e) => e.embedding);
+
+                const similarity = sql<number>`1 - (${cosineDistance(
+                  schema.Customers.embedding,
+                  _embedding
+                )})`;
+
+                const similarCustomers = await ctx.db
+                  .select({
+                    companyName: schema.Customers.companyName,
+                    companyIndustry: schema.Customers.companyIndustry,
+                    similarity,
+                  })
+                  .from(schema.Customers)
+                  .where(gt(similarity, 0.6))
+                  .orderBy(desc(similarity))
+                  .limit(3);
+
+                return similarCustomers;
+              },
+            },
+          },
+        });
+
+        const { object } = await generateObject({
+          model,
+
+          messages: [
+            {
+              role: "system",
+              content: `You are a sales assistant for a company that sells to customers in the ${prospect.companyIndustry} industry. You are currently working with ${prospect.companyName} who is ${prospect.companyAction}.`,
+            },
+            {
+              role: "user",
+              content: input.prompt,
+            },
+            {
+              role: "assistant",
+              content: result.text,
+            },
+          ],
+
+          schema: z.object({
+            title: z.string().describe("The title of the interaction"),
+            content: z
+              .string()
+              .describe(
+                "The content of the interaction. Don't include the assistant's thinking process."
+              ),
+          }),
+        });
+
+        return await ctx.db.insert(schema.ProspectsInteractions).values({
+          prospectId: input.prospectId,
+          title: object.title,
+          notes: object.content,
+        });
       }),
   },
 });

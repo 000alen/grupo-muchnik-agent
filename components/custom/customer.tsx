@@ -1,6 +1,11 @@
 import { Customer as CustomerType } from "@/db/app-schema";
 import Link from "next/link";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building2, ChevronRight } from "lucide-react";
 
@@ -14,8 +19,10 @@ export default function Customer({ customer }: { customer: CustomerType }) {
           </div>
           <div className="flex-1">
             <h3 className="font-semibold">{customer.companyName}</h3>
-            {customer.industry && (
-              <p className="text-sm text-muted-foreground">{customer.industry}</p>
+            {customer.companyIndustry && (
+              <p className="text-sm text-muted-foreground">
+                {customer.companyIndustry}
+              </p>
             )}
           </div>
         </div>

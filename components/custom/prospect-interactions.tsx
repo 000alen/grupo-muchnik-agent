@@ -12,6 +12,8 @@ export default function ProspectInteractions({
 }: {
   prospectId: string;
 }) {
+  const utils = trpc.useUtils();
+
   const { data, isLoading, isError, error, fetchNextPage } =
     trpc.prospects.getLatestInteractions.useInfiniteQuery(
       {
@@ -21,6 +23,13 @@ export default function ProspectInteractions({
         getNextPageParam: (lastPage) => lastPage.nextCursor,
       }
     );
+
+  const { mutateAsync: write, isPending: isWriting } =
+    trpc.ai.write.useMutation({
+      onSuccess: async (result) => {
+        await utils.prospects.getLatestInteractions.invalidate();
+      },
+    });
 
   if (isError) {
     return (
@@ -34,11 +43,31 @@ export default function ProspectInteractions({
   return (
     <Card className="card-custom">
       <div className="space-y-4">
+        <div className="flex gap-4 mb-4">
+          <Button
+            onClick={() => write({ prospectId, prompt: "Write a cold email" })}
+            className="button-custom"
+            disabled={isWriting}
+          >
+            {isWriting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Writing...
+              </>
+            ) : (
+              "Write Cold Email"
+            )}
+          </Button>
+        </div>
+
         <div className="space-y-4">
           {data?.pages
             .flatMap((page) => page.items)
             .map((interaction) => (
-              <ProspectInteraction key={interaction.id} interaction={interaction} />
+              <ProspectInteraction
+                key={interaction.id}
+                interaction={interaction}
+              />
             ))}
         </div>
 

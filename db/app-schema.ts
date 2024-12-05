@@ -6,6 +6,7 @@ import {
   boolean,
   timestamp,
   vector,
+  index,
 } from "drizzle-orm/pg-core";
 import { ConfigSources } from "./config-schema";
 
@@ -18,13 +19,23 @@ export const Contacts = pgTable("contacts", {
 
 export type Contact = typeof Contacts.$inferSelect;
 
-export const Prospects = pgTable("prospects", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  companyName: text("company_name").notNull(),
-  industry: text("industry"),
-  embedding: vector("embedding", { dimensions: 1536 }),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export const Prospects = pgTable(
+  "prospects",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyName: text("company_name").notNull(),
+    companyAction: text("company_action"),
+    companyIndustry: text("company_industry"),
+    embedding: vector("embedding", { dimensions: 1536 }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    prospectEmbeddingIndex: index("prospectEmbeddingIndex").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops")
+    ),
+  })
+);
 
 export const ProspectContacts = pgTable("prospects_contacts", {
   id: serial("id").primaryKey(),
@@ -37,13 +48,22 @@ export type ProspectContact = typeof ProspectContacts.$inferSelect;
 
 export type Prospect = typeof Prospects.$inferSelect;
 
-export const Customers = pgTable("customers", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  companyName: text("company_name"),
-  industry: text("industry"),
-  embedding: vector("embedding", { dimensions: 1536 }),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export const Customers = pgTable(
+  "customers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyName: text("company_name"),
+    companyIndustry: text("company_industry"),
+    embedding: vector("embedding", { dimensions: 1536 }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    customerEmbeddingIndex: index("customerEmbeddingIndex").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops")
+    ),
+  })
+);
 
 export const CustomerContacts = pgTable("customers_contacts", {
   id: serial("id").primaryKey(),
