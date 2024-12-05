@@ -1,7 +1,7 @@
 import { createCallerFactory, procedure, router } from "@/trpc/trpc";
 import { createContext } from "@/trpc/context";
 import { z } from "zod";
-import { desc, eq, and, lte, gte } from "drizzle-orm";
+import { desc, eq, and, lte, gte, isNull } from "drizzle-orm";
 import { startOfWeek, endOfWeek } from "date-fns";
 import { createBulletinContent } from "@/lib/bulletin";
 import * as schema from "@/db/schema";
@@ -134,6 +134,29 @@ export const appRouter = router({
           .then(([customer]) => customer);
       }),
 
+    getUnassigned: procedure.query(async ({ ctx }) => {
+      return await ctx.db
+        .selectDistinct()
+        .from(schema.Customers)
+        .leftJoin(
+          schema.ConsultantsCustomers,
+          eq(schema.Customers.id, schema.ConsultantsCustomers.customerId)
+        )
+        .where(isNull(schema.ConsultantsCustomers.consultantId));
+    }),
+
+    assignToConsultant: procedure
+      .input(z.object({ customerId: z.string(), consultantId: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        // First delete any existing assignments for this customer
+        await ctx.db
+          .delete(schema.ConsultantsCustomers)
+          .where(eq(schema.ConsultantsCustomers.customerId, input.customerId));
+
+        // Then create the new assignment
+        return await ctx.db.insert(schema.ConsultantsCustomers).values(input);
+      }),
+
     create: procedure
       .input(z.object({ companyName: z.string(), industry: z.string() }))
       .mutation(async ({ ctx, input }) => {
@@ -220,6 +243,28 @@ export const appRouter = router({
           .where(eq(schema.Prospects.id, input.id))
           .limit(1)
           .then(([prospect]) => prospect);
+      }),
+
+    getUnassigned: procedure.query(async ({ ctx }) => {
+      return await ctx.db
+        .selectDistinct()
+        .from(schema.Prospects)
+        .leftJoin(
+          schema.ConsultantsProspects,
+          eq(schema.Prospects.id, schema.ConsultantsProspects.prospectId)
+        )
+        .where(isNull(schema.ConsultantsProspects.consultantId));
+    }),
+
+    assignToConsultant: procedure
+      .input(z.object({ prospectId: z.string(), consultantId: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        // First delete any existing assignments for this prospect
+        await ctx.db
+          .delete(schema.ConsultantsProspects)
+          .where(eq(schema.ConsultantsProspects.prospectId, input.prospectId));
+
+        return await ctx.db.insert(schema.ConsultantsProspects).values(input);
       }),
 
     create: procedure
@@ -332,6 +377,7 @@ export const appRouter = router({
 
       return await ctx.db.insert(schema.Bulletins).values({
         content,
+        title: "Weekly Prospect Update",
         sentAt: now,
       });
     }),
