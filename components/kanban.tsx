@@ -267,14 +267,18 @@ export function Kanban({
                           size="icon"
                           className="h-6 w-6 opacity-0 group-hover:opacity-100"
                           onClick={(e) => e.stopPropagation()}
+                          draggable={false}
                         >
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Open menu</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" draggable={false}>
                         <DropdownMenuItem
+                          draggable={false}
+                          onPointerDown={(e) => e.stopPropagation()}
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             handleCardClick(card.id);
                           }}
