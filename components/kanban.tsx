@@ -22,7 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { MoreHorizontal, Plus, UserPlus } from "lucide-react";
+import { MoreHorizontal, Plus, UserPlus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc-client";
@@ -217,6 +217,61 @@ export function Kanban({
     [router]
   );
 
+  const handleDelete = useCallback(
+    async (cardId: string) => {
+      console.log("delete", cardId);
+    },
+    []
+  );
+
+  const getCardMenu = useCallback(
+    (card: { id: string; title: string; content: string }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100"
+              onClick={(e) => e.stopPropagation()}
+              draggable={false}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" draggable={false}>
+            <DropdownMenuItem
+              draggable={false}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCardClick(card.id);
+              }}
+            >
+              View Details
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              draggable={false}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleDelete(card.id);
+              }}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Reject
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+    [handleCardClick, handleDelete]
+  );
+
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="flex-none p-4 flex items-center justify-between">
@@ -259,35 +314,7 @@ export function Kanban({
                 <DroppableColumn
                   column={column}
                   onCardClick={handleCardClick}
-                  getCardMenu={(card) => (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                          onClick={(e) => e.stopPropagation()}
-                          draggable={false}
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" draggable={false}>
-                        <DropdownMenuItem
-                          draggable={false}
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleCardClick(card.id);
-                          }}
-                        >
-                          View Details
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                  getCardMenu={getCardMenu}
                 />
               </div>
             ))}
